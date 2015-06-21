@@ -1,9 +1,15 @@
+from random import choice, randint
+from string import ascii_letters, digits
+
 from django import template
 from django.template.base import Node
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from random import choice, randint
-from string import ascii_letters, digits
+
+
+
+
+
 # from django.contrib.staticfiles.storage import staticfiles_storage
 import json
 
@@ -52,12 +58,14 @@ class ChartJs(Node):
         self.token = token.split_contents()
 
     def render(self, context):
+        # TODO: Use local staticfiles instead of CDN's. May be specify behavior in settings?
         assert len(self.token) == 4, 'Make sure you\'ve specified size, data and type for the chart.'
         chart_type = self.token[3].title()
         assert chart_type in ('Line', 'Bar', 'Radar'), \
             'Only Line, Bar and Radar chars are supported. You type is: %s' % chart_type
         size = list(map(int, self.token[1].split('x')))
         canvas_data = self.fill_data(template.Variable(self.token[2]).resolve(context))
+        # TODO: Use something better than generate random seq.
         canvas_id = ''.join(choice(LETTERS_AND_DIGITS) for _ in range(3))
         js_canvas_data = mark_safe(json.dumps(canvas_data, ensure_ascii=False))
         data = {
@@ -70,6 +78,7 @@ class ChartJs(Node):
             'jquery_lib': 'https://code.jquery.com/jquery-2.1.4.min.js',  # staticfiles_storage.url('css/Chart.min.js')
             'chart_js_lib': 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js',
         }
+        # TODO: Make away with jQuery. It requires only to parse JSON.
         return format_html('''
             <script type="text/javascript" src="{jquery_lib}"></script>
             <script type="text/javascript" src="{chart_js_lib}"></script>
@@ -82,6 +91,8 @@ class ChartJs(Node):
             ''', **data)
 
     def fill_data(self, variable):
+        if 'generator' in str(variable.__class__):
+            variable = tuple(variable)
         if isinstance(variable, (tuple, list)):
             # now determine, is it list of lists or list of values
             if isinstance(variable[0], (tuple, list)):
