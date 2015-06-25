@@ -10,6 +10,9 @@ from django.utils.safestring import mark_safe
 
 
 
+
+
+
 # from django.contrib.staticfiles.storage import staticfiles_storage
 import json
 
@@ -52,6 +55,7 @@ class ChartJs(Node):
     If you don't choose color it will be generated randomly.
     """
     CHART_PARAMETERS = ('fillColor', 'strokeColor', 'pointColor', 'pointHighlightStroke')
+    DEFAULT_OPACITY = 0.8
 
     def __init__(self, parser, token):
         self.parser = parser
@@ -108,7 +112,8 @@ class ChartJs(Node):
             max_length = max([len(set_['data']) for set_ in variable['datasets']])
             variable['labels'] = ['' for _ in range(max_length)]
         for set_ in variable['datasets']:
-            random_color = 'rgba({r}, {g}, {b}, 0.8)'.format(r=randint(0, 220), g=randint(0, 220), b=randint(0, 220))
+            random_color = 'rgba({r}, {g}, {b}, {opacity})'.format(r=randint(0, 220), g=randint(0, 220),
+                                                                   b=randint(0, 220), opacity=self.DEFAULT_OPACITY)
             for param in self.CHART_PARAMETERS:
                 set_.setdefault(param, random_color)
         return variable
